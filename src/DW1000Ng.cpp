@@ -282,6 +282,14 @@ namespace DW1000Ng {
 			} else if (clock == LDE_CLOCK) {
 				pmscctrl0[0] = SYS_XTI_CLOCK;
 				pmscctrl0[1] = 0x03;
+            } else if (clock == ACC_CLOCK_ON) { // Added for MULoc port
+                pmscctrl0[0] &= 0xB3;
+				pmscctrl0[0] |= ACC_CLOCK_ON;
+				pmscctrl0[1] |= 0x80;        
+            } else if (clock == ACC_CLOCK_OFF) { // Added for MULoc port
+                pmscctrl0[0] &= 0xB3;
+				pmscctrl0[1] |= 0x7F;
+
 			} else {
 				// TODO deliver proper warning
 			}
@@ -2104,6 +2112,23 @@ namespace DW1000Ng {
 		}
 		return estRxPwr;
 	}
+
+    /****************************************************************/
+    /**************** Custom functions for MULoc port ***************/
+    /****************************************************************/
+
+    uint16_t MULoc_dwRead16BitOffsetReg(byte regFileID, uint16_t offset) {
+        uint8_t data[2] = {0}; // 16 bits
+        uint16_t data_size = 2;
+        
+        _readBytesFromRegister(regFileID, offset, data, data_size);
+
+        return data;  // TODO: Do we need to reorder and sum bytes like the MULoc function does?
+    }
+
+    /****************************************************************/
+    /************** End Custom functions for MULoc port *************/
+    /****************************************************************/
 
 	#if DW1000NG_DEBUG
 	void getPrettyBytes(byte data[], char msgBuffer[], uint16_t n) {

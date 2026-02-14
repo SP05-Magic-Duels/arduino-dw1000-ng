@@ -570,6 +570,17 @@ namespace DW1000Ng {
 	*/
 	void setWait4Response(uint32_t timeMicroSeconds);
 
+    /****************************************************************/
+    /**************** Custom functions for MULoc port ***************/
+    /****************************************************************/
+    
+    uint16_t MULoc_dwRead16BitOffsetReg(byte regFileID, uint16_t offset);
+
+    /****************************************************************/
+    /************** End Custom functions for MULoc port *************/
+    /****************************************************************/
+
+
 	#if DW1000NG_PRINTABLE
 
 	/* ##### Print device id, address, etc. ###################################### */
