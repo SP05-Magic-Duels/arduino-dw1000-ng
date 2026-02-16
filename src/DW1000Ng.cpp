@@ -283,6 +283,13 @@ namespace DW1000Ng {
 			} else if (clock == LDE_CLOCK) {
 				pmscctrl0[0] = SYS_XTI_CLOCK;
 				pmscctrl0[1] = 0x03;
+			} else if (clock == ACC_CLOCK_ON) { // Added for MULoc port
+                pmscctrl0[0] &= 0xB3;
+                pmscctrl0[0] |= ACC_CLOCK_ON;
+                pmscctrl0[1] |= 0x80;
+            } else if (clock == ACC_CLOCK_OFF) { // Added for MULoc port
+                pmscctrl0[0] &= 0xB3;
+                pmscctrl0[1] |= 0x7F;
 			} else {
 				// TODO deliver proper warning
 			}
@@ -2131,6 +2138,16 @@ namespace DW1000Ng {
         uint16_t rxpacc = ((((uint16_t)rxFrameInfo[3] << 8) | (uint16_t)rxFrameInfo[2]) >> 4);
 
         return rxpacc;
+    }
+
+    void getAccData(uint8_t *buffer, uint16_t len, uint16_t accOffset)
+    {
+        // Force on the ACC clocks if we are sequenced
+        _enableClock(ACC_CLOCK_ON);
+
+        _readBytesFromRegister(ACC_MEM_ID, accOffset, buffer, len);
+
+        _enableClock(ACC_CLOCK_OFF); //revert clocks back
     }
 
 	#if DW1000NG_DEBUG

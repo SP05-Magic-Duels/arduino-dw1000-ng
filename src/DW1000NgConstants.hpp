@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2018 Michele Biondi, Andrea Salvatori
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,18 +32,18 @@
 
 	constexpr float TIME_RES     = 0.000015650040064103f;
 	constexpr float TIME_RES_INV = 63897.6f;
-	
+
 	/* Speed of radio waves (light) [m/s] * timestamp resolution [~15.65ps] of DW1000Ng */
 	constexpr float DISTANCE_OF_RADIO     = 0.0046917639786159f;
 	constexpr float DISTANCE_OF_RADIO_INV = 213.139451293f;
-	
+
 	// timestamp byte length - 40 bit -> 5 byte
 	constexpr uint8_t LENGTH_TIMESTAMP = 5;
-	
+
 	// timer/counter overflow (40 bits) -> 4overflow approx. every 17.2 seconds
 	constexpr int64_t TIME_OVERFLOW = 0x10000000000; //1099511627776LL
 	constexpr int64_t TIME_MAX      = 0xffffffffff;
-	
+
 	// time factors (relative to [us]) for setting delayed transceive
 	// TODO use non float
 	constexpr float SECONDS      = 1e6;
@@ -98,8 +98,8 @@ constexpr byte preamble_validity_matrix_PRF64[8][4] = {
 
 /* transmission/reception bit rate (TXBR) - reg:0x08, bits:14,13 */
 enum class DataRate : byte {
-    RATE_110KBPS, 
-    RATE_850KBPS, 
+    RATE_110KBPS,
+    RATE_850KBPS,
     RATE_6800KBPS
 };
 
@@ -156,6 +156,8 @@ constexpr byte SYS_XTI_CLOCK  = 0x01;
 constexpr byte SYS_PLL_CLOCK  = 0x02;
 constexpr byte TX_PLL_CLOCK = 0x20;
 constexpr byte LDE_CLOCK = 0x03;
+constexpr byte ACC_CLOCK_ON = 0x48; // Added for MULoc Port
+constexpr byte ACC_CLOCK_OFF = 0xAA; // ""; Not used; only an identifier
 
 /* range bias tables - APS011*/
 
@@ -192,11 +194,11 @@ enum class DriverAmplifierValue : byte {
 };
 
 enum class TransmitMixerValue : byte {
-    dB_0, 
-    dB_0_5, 
-    dB_1, 
-    dB_1_5, 
-    dB_2, 
+    dB_0,
+    dB_0_5,
+    dB_1,
+    dB_1_5,
+    dB_2,
     dB_2_5,
     dB_3,
     dB_3_5,

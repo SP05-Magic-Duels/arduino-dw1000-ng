@@ -575,6 +575,8 @@ namespace DW1000Ng {
 	*/
 	void setWait4Response(uint32_t timeMicroSeconds);
 
+	void getAccData(uint8_t *buffer, uint16_t len, uint16_t accOffset);
+
 	#if DW1000NG_PRINTABLE
 
 	/* ##### Print device id, address, etc. ###################################### */
