@@ -2044,6 +2044,13 @@ namespace DW1000Ng {
 		return DW1000NgUtils::bytesAsValue(data, LEN_SYS_TIME);
 	}
 
+	uint16_t getFPPathIdx() {
+	    byte data[LEN_FP_IDX_OFF];
+		memset(data, 0, LEN_FP_IDX_OFF);
+		_readBytesFromRegister(RX_TIME, FP_IDX_OFF, data, LEN_FP_IDX_OFF);
+		return DW1000NgUtils::bytesAsValue(data, LEN_FP_IDX_OFF);
+	}
+
 	float getReceiveQuality() {
 		byte         noiseBytes[LEN_STD_NOISE];
 		byte         fpAmpl2Bytes[LEN_FP_AMPL2];
@@ -2056,7 +2063,7 @@ namespace DW1000Ng {
 	}
 
 	uint16_t getCirPwrBytes() {
-	    uint16_t     cirPwrBytes;
+	    uint16_t cirPwrBytes = 0;
 		assert(LEN_CIR_PWR == sizeof(cirPwrBytes));
 		_readBytesFromRegister(RX_FQUAL, CIR_PWR_SUB, (byte*) &cirPwrBytes, LEN_CIR_PWR);
 		return cirPwrBytes;
@@ -2127,6 +2134,7 @@ namespace DW1000Ng {
 	uint16_t getPreambleAccumulationCount() {
         // Read the 4-byte Register 0x10
         byte rxFrameInfo[LEN_RX_FINFO];
+        memset(rxFrameInfo, 0, LEN_RX_FINFO);
         _readBytesFromRegister(RX_FINFO, NO_SUB, rxFrameInfo, LEN_RX_FINFO);
 
         // RXPACC is bits 20-31.

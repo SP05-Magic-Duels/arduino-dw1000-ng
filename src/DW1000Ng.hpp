@@ -304,6 +304,8 @@ namespace DW1000Ng {
 	*/
 	float getFirstPathPower();
 
+	uint16_t getFPPathIdx();
+
 	/**
 	Gets the last receive quality
 

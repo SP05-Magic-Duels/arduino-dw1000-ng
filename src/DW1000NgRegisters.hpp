@@ -134,8 +134,10 @@ constexpr uint16_t RX_TIME = 0x15;
 constexpr uint16_t LEN_RX_TIME = 14;
 constexpr uint16_t RX_STAMP_SUB = 0x00;
 constexpr uint16_t FP_AMPL1_SUB = 0x07;
+constexpr uint16_t FP_IDX_OFF = 5;
 constexpr uint16_t LEN_RX_STAMP = 5;
 constexpr uint16_t LEN_FP_AMPL1 = 2;
+constexpr uint16_t LEN_FP_IDX_OFF = 2;
 
 // RX frame quality
 constexpr uint16_t RX_FQUAL = 0x12;
