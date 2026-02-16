@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2018 Michele Biondi, Andrea Salvatori
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #if defined(__AVR__)
 	#include <EEPROM.h>
 #endif
@@ -55,7 +56,7 @@
 #include "SPIporting.hpp"
 
 namespace DW1000Ng {
-	
+
 	/* anonymous namespace to host private-like variables and methods */
 	namespace {
 
@@ -107,7 +108,7 @@ namespace DW1000Ng {
 		uint16_t		_antennaRxDelay = 0;
 
 		/* ############################# PRIVATE METHODS ################################### */
-		
+
 		/*
 		* Write bytes to the DW1000. Single bytes can be written to registers via sub-addressing.
 		* @param[in] cmd
@@ -125,7 +126,7 @@ namespace DW1000Ng {
 		void _writeBytesToRegister(byte cmd, uint16_t offset, byte data[], uint16_t data_size) {
 			byte header[3];
 			uint8_t headerLen = 1;
-			
+
 			// TODO proper error handling: address out of bounds
 			// build SPI header
 			if(offset == NO_SUB) {
@@ -141,7 +142,7 @@ namespace DW1000Ng {
 					headerLen += 2;
 				}
 			}
-			
+
 			SPIporting::writeToSPI(_ss, headerLen, header, data_size, data);
 		}
 
@@ -157,7 +158,7 @@ namespace DW1000Ng {
 		* @param[in] data_size
 		*		The number of bytes to be written
 		*/
-		void _writeValueToRegister(byte cmd, uint16_t offset, uint32_t data, uint16_t data_size) { 
+		void _writeValueToRegister(byte cmd, uint16_t offset, uint32_t data, uint16_t data_size) {
 			byte dataBytes[data_size];
 			DW1000NgUtils::writeValueToBytes(dataBytes, data, data_size);
 			_writeBytesToRegister(cmd, offset, dataBytes, data_size);
@@ -176,7 +177,7 @@ namespace DW1000Ng {
 		void _writeSingleByteToRegister(byte cmd, uint16_t offset, byte data) {
 			_writeBytesToRegister(cmd, offset, &data, 1); // 1 as data_size because writes a single byte
 		}
-		
+
 		/*
 		* Read bytes from the DW1000. Number of bytes depend on register length.
 		* @param[in] cmd
@@ -185,13 +186,13 @@ namespace DW1000Ng {
 		*		The number of bytes expected to be received.
 		* @param[out] data
 		*		The data array to be read into.
-		* @param[in] data_size 
+		* @param[in] data_size
 		*		The number of bytes to be read. example-> 2 Bytes = 2 as input
 		*/
 		void _readBytesFromRegister(byte cmd, uint16_t offset, byte data[], uint16_t data_size) {
 			byte header[3];
 			uint8_t headerLen = 1;
-			
+
 			// build SPI header
 			if(offset == NO_SUB) {
 				header[0] = READ | cmd;
@@ -234,12 +235,12 @@ namespace DW1000Ng {
 			byte targetByte; memset(&targetByte, 0, 1);
 			bitPosition = selectedBit%8;
 			_readBytesFromRegister(bitRegister, RegisterOffset+idx, &targetByte, 1);
-			
+
 			value ? bitSet(targetByte, bitPosition) : bitClear(targetByte, bitPosition);
 
 			if(RegisterOffset == NO_SUB)
 				RegisterOffset = 0x00;
-				
+
 			_writeBytesToRegister(bitRegister, RegisterOffset+idx, &targetByte, 1);
 		}
 
@@ -247,7 +248,7 @@ namespace DW1000Ng {
 		// TODO why always 4 bytes? can be different, see p. 58 table 10 otp memory map
 		void _readBytesOTP(uint16_t address, byte data[]) {
 			byte addressBytes[LEN_OTP_ADDR];
-			
+
 			// p60 - 6.3.3 Reading a value from OTP memory
 			// bytes of address
 			addressBytes[0] = (address & 0xFF);
@@ -287,7 +288,7 @@ namespace DW1000Ng {
 			}
 			_writeBytesToRegister(PMSC, PMSC_CTRL0_SUB, pmscctrl0, 2);
 		}
-		
+
 		/* Steps used to get Temp and Voltage */
 		void _vbatAndTempSteps() {
 			byte step1 = 0x80; _writeBytesToRegister(RF_CONF, 0x11, &step1, 1);
@@ -392,7 +393,7 @@ namespace DW1000Ng {
 
 		/* DRX_TUNE2 - reg:0x27, sub-reg:0x08, table 33 */
 		void _drxtune2() {
-			byte drxtune2[LEN_DRX_TUNE2];	
+			byte drxtune2[LEN_DRX_TUNE2];
 			if(_pacSize == PacSize::SIZE_8) {
 				if(_pulseFrequency == PulseFrequency::FREQ_16MHZ) {
 					DW1000NgUtils::writeValueToBytes(drxtune2, 0x311A002DL, LEN_DRX_TUNE2);
@@ -451,7 +452,7 @@ namespace DW1000Ng {
 
 		/* LDE_CFG2 - reg 0x2E, sub-reg:0x1806, table 50 */
 		void _ldecfg2() {
-			byte ldecfg2[LEN_LDE_CFG2];	
+			byte ldecfg2[LEN_LDE_CFG2];
 			if(_pulseFrequency == PulseFrequency::FREQ_16MHZ) {
 				_nlos == true ? DW1000NgUtils::writeValueToBytes(ldecfg2, 0x0003, LEN_LDE_CFG2) : DW1000NgUtils::writeValueToBytes(ldecfg2, 0x1607, LEN_LDE_CFG2);
 			} else if(_pulseFrequency == PulseFrequency::FREQ_64MHZ) {
@@ -540,7 +541,7 @@ namespace DW1000Ng {
 			} else {
 				// TODO proper error/warning handling
 			}
-			
+
 			_writeBytesToRegister(LDE_IF, LDE_REPC_SUB, lderepc, LEN_LDE_REPC);
 		}
 
@@ -748,7 +749,7 @@ namespace DW1000Ng {
 
 		/* TC_PGDELAY - reg:0x2A, sub-reg:0x0B, table 40 */
 		void _tcpgdelaytune() {
-			byte tcpgdelay[LEN_TC_PGDELAY];	
+			byte tcpgdelay[LEN_TC_PGDELAY];
 			if(_channel == Channel::CHANNEL_1) {
 				DW1000NgUtils::writeValueToBytes(tcpgdelay, 0xC9, LEN_TC_PGDELAY);
 			} else if(_channel == Channel::CHANNEL_2) {
@@ -802,7 +803,7 @@ namespace DW1000Ng {
 			_drxtune4H();
 			_ldecfg1();
 			_ldecfg2();
-			_lderepc(); 
+			_lderepc();
 			if(_autoTXPower) _txpowertune();
 			_rfrxctrlh();
 			_rftxctrl();
@@ -932,7 +933,7 @@ namespace DW1000Ng {
 			prealen &= 0x0F;
 			_txfctrl[2] &= 0xC3;
 			_txfctrl[2] |= (byte)((prealen << 2) & 0xFF);
-			
+
 			switch(preamble_length) {
 				case PreambleLength::LEN_64:
 					_pacSize = PacSize::SIZE_8;
@@ -952,7 +953,7 @@ namespace DW1000Ng {
 				default:
 					_pacSize = PacSize::SIZE_64; // In case of 1536, 2048 or 4096 preamble length.
 			}
-			
+
 			_preambleLength = preamble_length;
 		}
 
@@ -1211,8 +1212,8 @@ namespace DW1000Ng {
 		}
 
 		boolean _isReceiveTimeout() {
-			return (DW1000NgUtils::getBit(_sysstatus, LEN_SYS_STATUS, RXRFTO_BIT) || 
-					DW1000NgUtils::getBit(_sysstatus, LEN_SYS_STATUS, RXPTO_BIT) || 
+			return (DW1000NgUtils::getBit(_sysstatus, LEN_SYS_STATUS, RXRFTO_BIT) ||
+					DW1000NgUtils::getBit(_sysstatus, LEN_SYS_STATUS, RXPTO_BIT) ||
 					DW1000NgUtils::getBit(_sysstatus, LEN_SYS_STATUS, RXSFDTO_BIT));
 		}
 
@@ -1266,7 +1267,7 @@ namespace DW1000Ng {
 		SPIporting::SPIselect(_ss, _irq);
 		// reset chip (either soft or hard)
 		reset();
-		
+
 		SPIporting::setSPIspeed(SPIClock::SLOW);
 		_enableClock(SYS_XTI_CLOCK);
 		delay(5);
@@ -1300,7 +1301,7 @@ namespace DW1000Ng {
 
 		/* Cleared AON:CFG1(0x2C:0x0A) for proper operation of deepSleep */
 		_writeValueToRegister(AON, AON_CFG1_SUB, 0x00, LEN_AON_CFG1);
-		
+
 	}
 
 	void initializeNoInterrupt(uint8_t ss, uint8_t rst) {
@@ -1311,23 +1312,23 @@ namespace DW1000Ng {
 	void attachErrorHandler(void (* handleError)(void)) {
 		_handleError = handleError;
 	}
-	
+
 	void attachSentHandler(void (* handleSent)(void)) {
 		_handleSent = handleSent;
 	}
-	
+
 	void attachReceivedHandler(void (* handleReceived)(void)) {
 		_handleReceived = handleReceived;
 	}
-	
+
 	void attachReceiveFailedHandler(void (* handleReceiveFailed)(void)) {
 		_handleReceiveFailed = handleReceiveFailed;
 	}
-	
+
 	void attachReceiveTimeoutHandler(void (* handleReceiveTimeout)(void)) {
 		_handleReceiveTimeout = handleReceiveTimeout;
 	}
-	
+
 	void attachReceiveTimestampAvailableHandler(void (* handleReceiveTimestampAvailable)(void)) {
 		_handleReceiveTimestampAvailable = handleReceiveTimestampAvailable;
 	}
@@ -1501,7 +1502,7 @@ namespace DW1000Ng {
 
 	void softwareReset() {
 		SPIporting::setSPIspeed(SPIClock::SLOW);
-		
+
 		/* Disable sequencing and go to state "INIT" - (a) Sets SYSCLKS to 01 */
 		_disableSequencing();
 		/* Clear AON and WakeUp configuration */
@@ -1663,9 +1664,13 @@ namespace DW1000Ng {
 	}
 
 	float getTemperature() {
+		return getRawTemperature() * 1.14f + 23.0f;
+	}
+
+	byte getRawTemperature() {
 		_vbatAndTempSteps();
 		byte sar_ltemp = 0; _readBytesFromRegister(TX_CAL, 0x04, &sar_ltemp, 1);
-		return (sar_ltemp - _tmeas23C) * 1.14f + 23.0f;
+		return sar_ltemp - _tmeas23C;
 	}
 
 	float getBatteryVoltage() {
@@ -1680,7 +1685,7 @@ namespace DW1000Ng {
 		delay(1);
 		byte sar_lvbat = 0; _readBytesFromRegister(TX_CAL, 0x03, &sar_lvbat, 1);
 		byte sar_ltemp = 0; _readBytesFromRegister(TX_CAL, 0x04, &sar_ltemp, 1);
-		
+
 		// calculate voltage and temperature
 		vbat = (sar_lvbat - _vmeas3v3) / 173.0f + 3.3f;
 		temp = (sar_ltemp - _tmeas23C) * 1.14f + 23.0f;
@@ -1737,7 +1742,7 @@ namespace DW1000Ng {
 
 	void setTxAntennaDelay(uint16_t value) {
 		_antennaTxDelay = value;
-		_writeAntennaDelayRegisters();	
+		_writeAntennaDelayRegisters();
 	}
 	void setRxAntennaDelay(uint16_t value) {
 		_antennaRxDelay = value;
@@ -1867,7 +1872,7 @@ namespace DW1000Ng {
 
 		byte W4R_TIME[LEN_ACK_RESP_T_W4R_TIME_SUB];
 		DW1000NgUtils::writeValueToBytes(W4R_TIME, timeMicroSeconds, LEN_ACK_RESP_T_W4R_TIME_SUB);
-		W4R_TIME[2] &= 0x0F; 
+		W4R_TIME[2] &= 0x0F;
 		_writeBytesToRegister(ACK_RESP_T, ACK_RESP_T_W4R_TIME_SUB, W4R_TIME, LEN_ACK_RESP_T_W4R_TIME_SUB);
 	}
 
@@ -1924,7 +1929,7 @@ namespace DW1000Ng {
         _enableClock(SYS_PLL_CLOCK);
         _enableClock(TX_PLL_CLOCK);
 
-        if(repeat_interval < 4) 
+        if(repeat_interval < 4)
             repeat_interval = 4;
 
 		/* In diagnostic transmit power  mode (set next) the bytes 31:0 only are used for DX_TIME register */
@@ -1955,7 +1960,7 @@ namespace DW1000Ng {
 		}
 		// transmit data and length
 		_writeBytesToRegister(TX_BUFFER, NO_SUB, data, n);
-		
+
 		/* Sets up transmit frame control length based on data length */
 		_txfctrl[0] = (byte)(n & 0xFF); // 1 byte (regular length + 1 bit)
 		_txfctrl[1] &= 0xE0;
@@ -1979,7 +1984,7 @@ namespace DW1000Ng {
 		byte rxFrameInfo[LEN_RX_FINFO];
 		_readBytesFromRegister(RX_FINFO, NO_SUB, rxFrameInfo, LEN_RX_FINFO);
 		len = ((((uint16_t)rxFrameInfo[1] << 8) | (uint16_t)rxFrameInfo[0]) & 0x03FF);
-		
+
 		if(_frameCheck && len > 2) {
 			return len-2;
 		}
@@ -2029,7 +2034,7 @@ namespace DW1000Ng {
 		byte data[LEN_SYS_TIME];
 		memset(data, 0, LEN_SYS_TIME);
 		_readBytesFromRegister(SYS_TIME, NO_SUB, data, LEN_SYS_TIME);
-		return DW1000NgUtils::bytesAsValue(data, LEN_SYS_TIME);		
+		return DW1000NgUtils::bytesAsValue(data, LEN_SYS_TIME);
 	}
 
 	float getReceiveQuality() {
@@ -2041,6 +2046,13 @@ namespace DW1000Ng {
 		noise = (uint16_t)noiseBytes[0] | ((uint16_t)noiseBytes[1] << 8);
 		f2    = (uint16_t)fpAmpl2Bytes[0] | ((uint16_t)fpAmpl2Bytes[1] << 8);
 		return (float)f2/noise;
+	}
+
+	uint16_t getCirPwrBytes() {
+	    uint16_t     cirPwrBytes;
+		assert(LEN_CIR_PWR == sizeof(cirPwrBytes));
+		_readBytesFromRegister(RX_FQUAL, CIR_PWR_SUB, (byte*) &cirPwrBytes, LEN_CIR_PWR);
+		return cirPwrBytes;
 	}
 
 	float getFirstPathPower() {
@@ -2094,7 +2106,7 @@ namespace DW1000Ng {
 			A       = 121.74;
 			corrFac = 1.1667;
 		}
-		
+
 		float estRxPwr = 10.0*log10(((float)C*(float)twoPower17)/((float)N*(float)N))-A;
 		if(estRxPwr <= -88) {
 			return estRxPwr;
@@ -2104,6 +2116,22 @@ namespace DW1000Ng {
 		}
 		return estRxPwr;
 	}
+
+	uint16_t getPreambleAccumulationCount() {
+        // Read the 4-byte Register 0x10
+        byte rxFrameInfo[LEN_RX_FINFO];
+        _readBytesFromRegister(RX_FINFO, NO_SUB, rxFrameInfo, LEN_RX_FINFO);
+
+        // RXPACC is bits 20-31.
+        // rxFrameInfo[3] contains bits 24-31
+        // rxFrameInfo[2] contains bits 16-23
+
+        // We take the top two bytes (bits 16-31) and shift right by 4.
+        // This discards bits 16-19 and aligns bit 20 to position 0.
+        uint16_t rxpacc = ((((uint16_t)rxFrameInfo[3] << 8) | (uint16_t)rxFrameInfo[2]) >> 4);
+
+        return rxpacc;
+    }
 
 	#if DW1000NG_DEBUG
 	void getPrettyBytes(byte data[], char msgBuffer[], uint16_t n) {
