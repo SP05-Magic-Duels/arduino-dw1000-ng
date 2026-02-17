@@ -2158,6 +2158,48 @@ namespace DW1000Ng {
         _enableClock(ACC_CLOCK_OFF); //revert clocks back
     }
 
+    /*! ------------------------------------------------------------------------------------------------------------------
+ * from @fn dwt_readcarrierintegrator()
+ *
+ * @brief This is used to read the RX carrier integrator value (relating to the frequency offset of the TX node)
+ *
+ * NOTE: This is a 21-bit signed quantity, the function sign extends the most significant bit, which is bit #20
+ *       (numbering from bit zero) to return a 32-bit signed integer value.
+ *
+ * input parameters - NONE
+ *
+ * return value - the (int32) signed carrier integrator value.
+ *                A positive value means the local RX clock is running faster than the remote TX device.
+ */
+
+#define B20_SIGN_EXTEND_TEST (0x00100000UL)
+#define B20_SIGN_EXTEND_MASK (0xFFF00000UL)
+#define DRX_CARRIER_INT_MASK (0x001FFFFFUL)
+
+    int32_t getCarrierIntegrator(void) {
+        uint32_t regval = 0 ;
+        int j ;
+        uint8_t buffer[LEN_DRX_CAR_INT] ;
+
+        /* Read 3 bytes into buffer (21-bit quantity) */
+
+        _readBytesFromRegister(DRX_TUNE,DRX_CAR_INT_SUB,LEN_DRX_CAR_INT, buffer) ;
+
+        for (j = 2 ; j >= 0 ; j --)  // arrange the three bytes into an unsigned integer value
+        {
+            regval = (regval << 8) + buffer[j] ;
+        }
+
+        if (regval & B20_SIGN_EXTEND_TEST) regval |= B20_SIGN_EXTEND_MASK ; // sign extend bit #20 to whole word
+        else regval &= DRX_CARRIER_INT_MASK ;                               // make sure upper bits are clear if not sign extending
+
+        return (int32_t) regval ; // cast unsigned value to signed quantity.
+    }
+
+    void readRCPhase(uint8_t reg, uint16_t offset, uint16_t length, uint8_t *buffer) {
+        _readBytesFromRegister(RX_TTCKO_ID, 4, buffer, 1);
+    }
+
 	#if DW1000NG_DEBUG
 	void getPrettyBytes(byte data[], char msgBuffer[], uint16_t n) {
         uint16_t i, j, b;
