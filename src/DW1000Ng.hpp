@@ -579,6 +579,10 @@ namespace DW1000Ng {
 
 	void getAccData(uint8_t *buffer, uint16_t len, uint16_t accOffset);
 
+    int32_t getCarrierIntegrator(void);
+
+    void readRCPhase(uint8_t *buffer);
+
 	#if DW1000NG_PRINTABLE
 
 	/* ##### Print device id, address, etc. ###################################### */

@@ -2183,7 +2183,7 @@ namespace DW1000Ng {
 
         /* Read 3 bytes into buffer (21-bit quantity) */
 
-        _readBytesFromRegister(DRX_TUNE,DRX_CAR_INT_SUB,LEN_DRX_CAR_INT, buffer) ;
+        _readBytesFromRegister(DRX_TUNE,DRX_CAR_INT_SUB, buffer, LEN_DRX_CAR_INT) ;
 
         for (j = 2 ; j >= 0 ; j --)  // arrange the three bytes into an unsigned integer value
         {
@@ -2196,7 +2196,7 @@ namespace DW1000Ng {
         return (int32_t) regval ; // cast unsigned value to signed quantity.
     }
 
-    void readRCPhase(uint8_t reg, uint16_t offset, uint16_t length, uint8_t *buffer) {
+    void readRCPhase(uint8_t *buffer) {
         _readBytesFromRegister(RX_TTCKO_ID, 4, buffer, 1);
     }
 
