@@ -282,6 +282,14 @@ namespace DW1000Ng {
 			} else if (clock == LDE_CLOCK) {
 				pmscctrl0[0] = SYS_XTI_CLOCK;
 				pmscctrl0[1] = 0x03;
+            } else if (clock == ACC_CLOCK_ON) { // Added for MULoc port
+                pmscctrl0[0] &= 0xB3;
+				pmscctrl0[0] |= ACC_CLOCK_ON;
+				pmscctrl0[1] |= 0x80;        
+            } else if (clock == ACC_CLOCK_OFF) { // Added for MULoc port
+                pmscctrl0[0] &= 0xB3;
+				pmscctrl0[1] |= 0x7F;
+
 			} else {
 				// TODO deliver proper warning
 			}
@@ -2104,6 +2112,92 @@ namespace DW1000Ng {
 		}
 		return estRxPwr;
 	}
+
+    /****************************************************************/
+    /**************** Custom functions for MULoc port ***************/
+    /****************************************************************/
+
+    /**
+     * Read a 2-byte buffer and return it as one 16-bit int value
+     * Doesn't seem to return an error to check
+     */
+    uint16_t MULoc_dwRead16BitOffsetReg(byte regFileID, uint16_t offset) {
+        uint8_t data[2] = {0}; // 16 bits
+        uint16_t data_size = 2;
+        
+        _readBytesFromRegister(regFileID, offset, data, data_size);
+
+        return (data[1] << 8 + data[0]);  // TODO: Do we need to reorder and sum bytes like the MULoc function does?
+    }
+
+    /*! ------------------------------------------------------------------------------------------------------------------
+    * @fn MULoc_dwt_readaccdata()
+    *
+    *  @brief This is used to read the data from the Accumulator buffer, from an offset location give by offset parameter
+    *
+    * input parameters
+    * @param buffer - the buffer into which the data will be read
+    * @param length - the length of data to read (in bytes)
+    * @param accOffset - the offset in the acc buffer from which to read the data
+    *
+    * output parameters
+    *
+    * no return value
+    */
+    void MULoc_dwt_readaccdata(uint8_t *buffer, uint16_t len, uint16_t accOffset)
+    {
+        // Force on the ACC clocks if we are sequenced
+        _enableClock(ACC_CLOCK_ON);
+
+        _readBytesFromRegister(ACC_MEM_ID, accOffset, buffer, len);
+
+
+        _enableClock(ACC_CLOCK_OFF); //revert clocks back
+    }
+    
+    
+    /*! ------------------------------------------------------------------------------------------------------------------
+    * @fn dwt_readcarrierintegrator()
+    *
+    * @brief This is used to read the RX carrier integrator value (relating to the frequency offset of the TX node)
+    *
+    * NOTE: This is a 21-bit signed quantity, the function sign extends the most significant bit, which is bit #20
+    *       (numbering from bit zero) to return a 32-bit signed integer value.
+    *
+    * input parameters - NONE
+    *
+    * return value - the (int32) signed carrier integrator value.
+    *                A positive value means the local RX clock is running faster than the remote TX device.
+    */
+
+    #define B20_SIGN_EXTEND_TEST (0x00100000UL)
+    #define B20_SIGN_EXTEND_MASK (0xFFF00000UL)
+    #define DRX_CARRIER_INT_MASK    0x001FFFFF
+
+    int32_t MULoc_dwt_readcarrierintegrator(void)
+    {
+        uint32_t  regval = 0 ;
+        int     j ;
+        uint8_t   buffer[LEN_DRX_CAR_INT] ;
+
+        /* Read 3 bytes into buffer (21-bit quantity) */
+
+        dwt_readfromdevice(DRX_TUNE,DRX_CAR_INT_SUB,LEN_DRX_CAR_INT, buffer) ;
+
+        for (j = 2 ; j >= 0 ; j --)  // arrange the three bytes into an unsigned integer value
+        {
+            regval = (regval << 8) + buffer[j] ;
+        }
+
+        if (regval & B20_SIGN_EXTEND_TEST) regval |= B20_SIGN_EXTEND_MASK ; // sign extend bit #20 to whole word
+        else regval &= DRX_CARRIER_INT_MASK ;                               // make sure upper bits are clear if not sign extending
+
+        return (int32_t) regval ; // cast unsigned value to signed quantity.
+    }
+    
+    /****************************************************************/
+    /************** End Custom functions for MULoc port *************/
+    /****************************************************************/
 
 	#if DW1000NG_DEBUG
 	void getPrettyBytes(byte data[], char msgBuffer[], uint16_t n) {

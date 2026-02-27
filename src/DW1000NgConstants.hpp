@@ -156,6 +156,8 @@ constexpr byte SYS_XTI_CLOCK  = 0x01;
 constexpr byte SYS_PLL_CLOCK  = 0x02;
 constexpr byte TX_PLL_CLOCK = 0x20;
 constexpr byte LDE_CLOCK = 0x03;
+constexpr byte ACC_CLOCK_ON = 0x48; // Added for MULoc Port
+constexpr byte ACC_CLOCK_OFF = 0xAA; // ""; Not used; only an identifier
 
 /* range bias tables - APS011*/
 
