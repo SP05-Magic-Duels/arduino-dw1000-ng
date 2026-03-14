@@ -430,6 +430,8 @@ namespace DW1000Ng {
 
 	boolean isReceiveDone();
 
+    uint8_t getReceiveErrors();
+
 	void clearReceiveStatus();
 
 	boolean isReceiveFailed();

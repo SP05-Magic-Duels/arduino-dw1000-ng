@@ -1218,6 +1218,17 @@ namespace DW1000Ng {
 					DW1000NgUtils::getBit(_sysstatus, LEN_SYS_STATUS, LDEERR_BIT));
 		}
 
+        uint8_t getReceiveErrors() {
+            uint8_t errors = 0;
+
+            errors |= (DW1000NgUtils::getBit(_sysstatus, LEN_SYS_STATUS, RXPHE_BIT) <<3)
+            | (DW1000NgUtils::getBit(_sysstatus, LEN_SYS_STATUS, RXFCE_BIT) << 2)
+			| (DW1000NgUtils::getBit(_sysstatus, LEN_SYS_STATUS, RXRFSL_BIT) << 1)
+			| DW1000NgUtils::getBit(_sysstatus, LEN_SYS_STATUS, LDEERR_BIT);
+
+            return errors;
+        }
+
 		boolean _isReceiveTimeout() {
 			return (DW1000NgUtils::getBit(_sysstatus, LEN_SYS_STATUS, RXRFTO_BIT) ||
 					DW1000NgUtils::getBit(_sysstatus, LEN_SYS_STATUS, RXPTO_BIT) ||
