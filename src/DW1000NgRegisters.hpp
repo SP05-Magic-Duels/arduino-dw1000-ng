@@ -151,6 +151,9 @@ constexpr uint16_t LEN_FP_AMPL2 = 2;
 constexpr uint16_t LEN_FP_AMPL3 = 2;
 constexpr uint16_t LEN_CIR_PWR = 2;
 
+// RX time tracking offset
+constexpr uint16_t RX_TTCKO_ID = 0x14;
+
 // TX timestamp register
 constexpr uint16_t TX_TIME = 0x17;
 constexpr uint16_t LEN_TX_TIME = 10;

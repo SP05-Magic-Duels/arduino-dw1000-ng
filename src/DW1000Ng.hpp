@@ -430,6 +430,8 @@ namespace DW1000Ng {
 
 	boolean isReceiveDone();
 
+    uint8_t getReceiveErrors();
+
 	void clearReceiveStatus();
 
 	boolean isReceiveFailed();
@@ -578,6 +580,10 @@ namespace DW1000Ng {
 	void setWait4Response(uint32_t timeMicroSeconds);
 
 	void getAccData(uint8_t *buffer, uint16_t len, uint16_t accOffset);
+
+    int32_t getCarrierIntegrator(void);
+
+    void readRCPhase(uint8_t *buffer);
 
 	#if DW1000NG_PRINTABLE
 
